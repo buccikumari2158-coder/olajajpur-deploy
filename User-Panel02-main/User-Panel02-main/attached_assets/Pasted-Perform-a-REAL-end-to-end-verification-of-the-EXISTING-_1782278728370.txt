@@ -1,0 +1,67 @@
+Perform a REAL end-to-end verification of the EXISTING codebase only.
+
+Do NOT assume anything is working just because code exists.
+
+Do NOT mark any feature as VERIFIED unless you actually execute, test, and confirm it works at runtime.
+
+Do NOT create a new application.
+Do NOT rebuild from scratch.
+Do NOT change UI, colors, theme, layout, navigation, pages, responsiveness, branding, Firebase setup, MongoDB setup, or business logic unless required to fix a bug.
+
+Current issue:
+The mobile preview is showing runtime errors (red error screen / timeout errors). Find the exact root cause and fix it completely.
+
+Required tasks:
+
+1. Fix all runtime errors shown in mobile preview.
+2. Fix any startup crashes.
+3. Fix any API timeout issues.
+4. Fix any loading/infinite loading problems.
+5. Fix any Expo/React Native runtime issues.
+6. Fix any Socket.IO connection issues.
+7. Fix any API route failures.
+8. Fix any database connection failures.
+9. Fix any image upload issues.
+10. Fix any wallet-related issues.
+11. Fix any ride booking flow issues.
+12. Fix any ride acceptance/cancellation/completion issues.
+13. Fix any driver dashboard issues.
+14. Fix any admin settings save issues.
+15. Fix any distance, ETA, and fare calculation issues.
+16. Fix any profile update issues.
+
+Push Notifications:
+
+- Install and configure expo-notifications correctly.
+- Implement push token registration.
+- Save push tokens in database.
+- Send notifications for:
+  - New ride request
+  - Driver accepted ride
+  - Driver arrived
+  - Ride completed
+  - Wallet recharge success
+- Verify notifications actually work.
+
+Verification Rules:
+
+- Do not report "WORKING VERIFIED" based only on source code.
+- Actually test every feature.
+- If a feature cannot be tested, mark it as NOT VERIFIED.
+- If a feature fails during testing, mark it as BROKEN.
+- Provide evidence from logs, API responses, runtime output, database results, and actual execution.
+
+Final Report Format:
+
+1. Working & Tested Features
+2. Fixed During This Session
+3. Broken Features Still Remaining
+4. Features Not Yet Verified
+5. Runtime Errors Found & Fixed
+6. Push Notification Status
+7. Mobile Preview Status
+8. API Status
+9. Database Status
+10. Exact Remaining Blockers
+
+Do not give assumptions. Give only evidence-based results from actual runtime testing.

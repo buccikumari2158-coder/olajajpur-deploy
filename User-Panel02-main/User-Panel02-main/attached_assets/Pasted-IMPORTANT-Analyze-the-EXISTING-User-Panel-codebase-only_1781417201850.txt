@@ -1,0 +1,110 @@
+IMPORTANT:
+
+Analyze the EXISTING User Panel codebase only.
+
+Do NOT create a new application.
+
+Do NOT rebuild from scratch.
+
+Do NOT change UI, colors, theme, logo, layout, pages, navigation design, fonts, icons, responsiveness or existing functionality.
+
+Do NOT remove any feature.
+
+Only modify the existing Driver onboarding flow.
+
+Current Requirement:
+
+1. When a passenger clicks "Become a Driver", do NOT open the registration page directly.
+
+2. First open a new Driver Introduction page.
+
+Driver Introduction Page:
+
+- Show existing app logo at the top.
+- Show 3 simple benefit points:
+• Earn money on your own schedule.
+• Receive ride requests from nearby passengers.
+• Fast and secure payouts through your wallet.
+- Keep the page simple and clean.
+- No bottom navigation.
+- No side menu.
+- No extra buttons.
+- Only one button:
+"Continue"
+
+3. When the user clicks Continue:
+
+- Open the existing Driver Registration page.
+
+4. After registration submission:
+
+- Open the existing Approval Pending page.
+
+5. While driver status is:
+PENDING
+
+- Show only Approval Pending page.
+- Hide bottom navigation completely.
+- Hide dashboard access.
+- Hide registration page access.
+- User must not be able to reopen registration.
+
+6. If driver status is:
+REJECTED
+
+- Show existing Rejected page.
+- Display:
+• Back to Passenger button
+OR
+• Reapply button
+- No driver dashboard access.
+- No driver navigation.
+
+7. If driver status is:
+APPROVED
+
+- Open the existing Driver Dashboard.
+- Enable the existing Driver Navigation Bar.
+- Hide:
+• Registration page
+• Pending page
+• Rejected page
+- Approved drivers must only see normal driver dashboard/navigation.
+
+8. Fix Navigation Logic:
+Currently registration and pending pages appear inside driver navigation after registration.
+
+This is incorrect.
+
+Registration, Pending and Rejected pages must NEVER appear as navigation tabs.
+
+They are onboarding screens only.
+
+Driver navigation tabs must appear ONLY after admin approval.
+
+Verification:
+
+Passenger
+→ Become a Driver
+→ Driver Introduction
+→ Continue
+→ Registration
+→ Pending
+→ Approved by Admin
+→ Driver Dashboard + Navigation
+
+OR
+
+Passenger
+→ Become a Driver
+→ Driver Introduction
+→ Continue
+→ Registration
+→ Pending
+→ Rejected
+→ Reapply / Back to Passenger
+
+Do not change any other feature.
+Do not change database structure.
+Do not change UI design.
+Only fix and complete the existing driver onboarding flow.

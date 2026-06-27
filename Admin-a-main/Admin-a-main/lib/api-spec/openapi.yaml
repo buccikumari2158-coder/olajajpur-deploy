@@ -1,0 +1,2627 @@
+openapi: "3.0.3"
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: "1.0.0"
+servers:
+  - url: /api
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current admin info
+      responses:
+        "200":
+          description: Admin info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Admin"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout admin
+      responses:
+        "200":
+          description: Logged out
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get overview statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/earnings:
+    get:
+      operationId: getDashboardEarnings
+      tags: [dashboard]
+      summary: Get earnings chart data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, year]
+      responses:
+        "200":
+          description: Earnings data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EarningsPoint"
+
+  /dashboard/ride-analytics:
+    get:
+      operationId: getRideAnalytics
+      tags: [dashboard]
+      summary: Get ride completion analytics
+      responses:
+        "200":
+          description: Ride analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideAnalytics"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent admin activity log
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+        "404":
+          description: User not found
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /users/{id}/action:
+    post:
+      operationId: userAction
+      tags: [users]
+      summary: Perform admin action on user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserActionInput"
+      responses:
+        "200":
+          description: Action performed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/rides:
+    get:
+      operationId: listUserRides
+      tags: [users]
+      summary: Get ride history for user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User rides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideListResponse"
+
+  /users/{id}/wallet-adjustment:
+    post:
+      operationId: adjustUserWallet
+      tags: [users]
+      summary: Add or deduct wallet balance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletAdjustmentInput"
+      responses:
+        "200":
+          description: Wallet updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletBalance"
+
+  /drivers:
+    get:
+      operationId: listDrivers
+      tags: [drivers]
+      summary: List all drivers
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: approvalStatus
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Driver list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverListResponse"
+    post:
+      operationId: createDriver
+      tags: [drivers]
+      summary: Create driver manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverInput"
+      responses:
+        "201":
+          description: Created driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/pending-approvals:
+    get:
+      operationId: getPendingDriverApprovals
+      tags: [drivers]
+      summary: Get drivers pending approval
+      responses:
+        "200":
+          description: Pending approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}:
+    get:
+      operationId: getDriver
+      tags: [drivers]
+      summary: Get driver by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Driver details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverDetail"
+        "404":
+          description: Driver not found
+    patch:
+      operationId: updateDriver
+      tags: [drivers]
+      summary: Update driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverUpdate"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+    delete:
+      operationId: deleteDriver
+      tags: [drivers]
+      summary: Delete driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /drivers/{id}/action:
+    post:
+      operationId: driverAction
+      tags: [drivers]
+      summary: Perform admin action on driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverActionInput"
+      responses:
+        "200":
+          description: Action performed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}/verify-document:
+    post:
+      operationId: verifyDriverDocument
+      tags: [drivers]
+      summary: Approve or reject a driver document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentVerificationInput"
+      responses:
+        "200":
+          description: Document verification updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverDocument"
+
+  /drivers/{id}/rides:
+    get:
+      operationId: listDriverRides
+      tags: [drivers]
+      summary: Get ride history for driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Driver rides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideListResponse"
+
+  /rides/active:
+    get:
+      operationId: getActiveRides
+      tags: [rides]
+      summary: Get all currently active rides
+      responses:
+        "200":
+          description: Active rides
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ride"
+
+  /rides:
+    get:
+      operationId: listRides
+      tags: [rides]
+      summary: List all rides
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ride list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideListResponse"
+
+  /rides/{id}:
+    get:
+      operationId: getRide
+      tags: [rides]
+      summary: Get ride by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ride details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideDetail"
+        "404":
+          description: Ride not found
+    patch:
+      operationId: updateRide
+      tags: [rides]
+      summary: Update ride (admin override)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RideUpdate"
+      responses:
+        "200":
+          description: Updated ride
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+
+  /rides/{id}/cancel:
+    post:
+      operationId: cancelRide
+      tags: [rides]
+      summary: Force cancel a ride
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelRideInput"
+      responses:
+        "200":
+          description: Ride cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+
+  /rides/{id}/assign-driver:
+    post:
+      operationId: assignDriverToRide
+      tags: [rides]
+      summary: Manually assign driver to ride
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignDriverInput"
+      responses:
+        "200":
+          description: Driver assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+
+  /pricing:
+    get:
+      operationId: getPricing
+      tags: [pricing]
+      summary: Get current pricing settings
+      responses:
+        "200":
+          description: Pricing settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingSettings"
+    patch:
+      operationId: updatePricing
+      tags: [pricing]
+      summary: Update pricing settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingUpdate"
+      responses:
+        "200":
+          description: Updated pricing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingSettings"
+
+  /pricing/surge-zones:
+    get:
+      operationId: listSurgeZones
+      tags: [pricing]
+      summary: List surge pricing zones
+      responses:
+        "200":
+          description: Surge zones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SurgeZone"
+    post:
+      operationId: createSurgeZone
+      tags: [pricing]
+      summary: Create surge pricing zone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurgeZoneInput"
+      responses:
+        "201":
+          description: Created surge zone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurgeZone"
+
+  /pricing/surge-zones/{id}:
+    patch:
+      operationId: updateSurgeZone
+      tags: [pricing]
+      summary: Update surge zone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurgeZoneUpdate"
+      responses:
+        "200":
+          description: Updated surge zone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurgeZone"
+    delete:
+      operationId: deleteSurgeZone
+      tags: [pricing]
+      summary: Delete surge zone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /service-areas:
+    get:
+      operationId: listServiceAreas
+      tags: [settings]
+      summary: List service areas
+      responses:
+        "200":
+          description: Service areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceArea"
+    post:
+      operationId: createServiceArea
+      tags: [settings]
+      summary: Create service area
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceAreaInput"
+      responses:
+        "201":
+          description: Created service area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceArea"
+
+  /service-areas/{id}:
+    patch:
+      operationId: updateServiceArea
+      tags: [settings]
+      summary: Update service area
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceAreaUpdate"
+      responses:
+        "200":
+          description: Updated service area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceArea"
+    delete:
+      operationId: deleteServiceArea
+      tags: [settings]
+      summary: Delete service area
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /payments/summary:
+    get:
+      operationId: getPaymentSummary
+      tags: [payments]
+      summary: Get payment summary stats
+      responses:
+        "200":
+          description: Payment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSummary"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List all payments
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentListResponse"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get payment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}/refund:
+    post:
+      operationId: refundPayment
+      tags: [payments]
+      summary: Refund a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefundInput"
+      responses:
+        "200":
+          description: Payment refunded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /wallets:
+    get:
+      operationId: listWallets
+      tags: [wallets]
+      summary: List all wallets
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: frozen
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wallet list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletListResponse"
+
+  /wallets/{id}:
+    get:
+      operationId: getWallet
+      tags: [wallets]
+      summary: Get wallet by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/{id}/freeze:
+    post:
+      operationId: freezeWallet
+      tags: [wallets]
+      summary: Freeze or unfreeze a wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletFreezeInput"
+      responses:
+        "200":
+          description: Wallet updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/{id}/transactions:
+    get:
+      operationId: listWalletTransactions
+      tags: [wallets]
+      summary: Get wallet transaction history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wallet transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletTransactionListResponse"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List push notifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationListResponse"
+    post:
+      operationId: sendNotification
+      tags: [notifications]
+      summary: Send push notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationInput"
+      responses:
+        "201":
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}:
+    get:
+      operationId: getNotification
+      tags: [notifications]
+      summary: Get notification by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+    delete:
+      operationId: deleteNotification
+      tags: [notifications]
+      summary: Delete notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /promos:
+    get:
+      operationId: listPromos
+      tags: [promos]
+      summary: List promo codes
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Promo list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromoListResponse"
+    post:
+      operationId: createPromo
+      tags: [promos]
+      summary: Create promo code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoInput"
+      responses:
+        "201":
+          description: Created promo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Promo"
+
+  /promos/{id}:
+    get:
+      operationId: getPromo
+      tags: [promos]
+      summary: Get promo by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Promo details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Promo"
+    patch:
+      operationId: updatePromo
+      tags: [promos]
+      summary: Update promo code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoUpdate"
+      responses:
+        "200":
+          description: Updated promo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Promo"
+    delete:
+      operationId: deletePromo
+      tags: [promos]
+      summary: Delete promo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /support/stats:
+    get:
+      operationId: getSupportStats
+      tags: [support]
+      summary: Get support ticket stats
+      responses:
+        "200":
+          description: Support stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportStats"
+
+  /support:
+    get:
+      operationId: listSupportTickets
+      tags: [support]
+      summary: List support tickets
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicketListResponse"
+    post:
+      operationId: createSupportTicket
+      tags: [support]
+      summary: Create a support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketInput"
+      responses:
+        "201":
+          description: Created ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
+  /support/{id}:
+    get:
+      operationId: getSupportTicket
+      tags: [support]
+      summary: Get support ticket by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+    patch:
+      operationId: updateSupportTicket
+      tags: [support]
+      summary: Update ticket status or reply
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketUpdate"
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
+  /settings/public:
+    get:
+      operationId: getPublicSettings
+      tags: [settings]
+      summary: Get public app settings (no auth)
+      responses:
+        "200":
+          description: Public settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicSettings"
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get app settings
+      responses:
+        "200":
+          description: App settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update app settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  /content/banners:
+    get:
+      operationId: listBanners
+      tags: [content]
+      summary: List banners
+      responses:
+        "200":
+          description: Banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Banner"
+    post:
+      operationId: createBanner
+      tags: [content]
+      summary: Create banner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerInput"
+      responses:
+        "201":
+          description: Created banner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+
+  /content/banners/{id}:
+    patch:
+      operationId: updateBanner
+      tags: [content]
+      summary: Update banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerUpdate"
+      responses:
+        "200":
+          description: Updated banner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+    delete:
+      operationId: deleteBanner
+      tags: [content]
+      summary: Delete banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /content/announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [content]
+      summary: List announcements
+      responses:
+        "200":
+          description: Announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+    post:
+      operationId: createAnnouncement
+      tags: [content]
+      summary: Create announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "201":
+          description: Created announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /content/announcements/{id}:
+    patch:
+      operationId: updateAnnouncement
+      tags: [content]
+      summary: Update announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementUpdate"
+      responses:
+        "200":
+          description: Updated announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+    delete:
+      operationId: deleteAnnouncement
+      tags: [content]
+      summary: Delete announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  schemas:
+    Admin:
+      type: object
+      required: [id, email, name, role, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      required:
+        - totalUsers
+        - totalDrivers
+        - onlineDrivers
+        - offlineDrivers
+        - activeRides
+        - completedRides
+        - cancelledRides
+        - pendingApprovals
+        - totalEarnings
+        - todayEarnings
+        - weeklyEarnings
+        - monthlyEarnings
+        - totalComplaints
+        - totalNotifications
+        - totalWalletTransactions
+      properties:
+        totalUsers:
+          type: integer
+        totalDrivers:
+          type: integer
+        onlineDrivers:
+          type: integer
+        offlineDrivers:
+          type: integer
+        activeRides:
+          type: integer
+        completedRides:
+          type: integer
+        cancelledRides:
+          type: integer
+        pendingApprovals:
+          type: integer
+        totalEarnings:
+          type: number
+        todayEarnings:
+          type: number
+        weeklyEarnings:
+          type: number
+        monthlyEarnings:
+          type: number
+        totalComplaints:
+          type: integer
+        totalNotifications:
+          type: integer
+        totalWalletTransactions:
+          type: integer
+
+    EarningsPoint:
+      type: object
+      required: [date, amount, rides]
+      properties:
+        date:
+          type: string
+        amount:
+          type: number
+        rides:
+          type: integer
+
+    RideAnalytics:
+      type: object
+      required: [completed, cancelled, active, pending, completionRate]
+      properties:
+        completed:
+          type: integer
+        cancelled:
+          type: integer
+        active:
+          type: integer
+        pending:
+          type: integer
+        completionRate:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, message, timestamp]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    User:
+      type: object
+      required: [id, name, phone, status, isVerified, totalRides, totalSpending, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        profileImage:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, banned, suspended]
+        isVerified:
+          type: boolean
+        isBlockedFromBooking:
+          type: boolean
+        totalRides:
+          type: integer
+        cancelledRides:
+          type: integer
+        totalSpending:
+          type: number
+        walletBalance:
+          type: number
+        fcmToken:
+          type: string
+        lastActiveAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserDetail:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            recentRides:
+              type: array
+              items:
+                $ref: "#/components/schemas/Ride"
+            walletTransactions:
+              type: array
+              items:
+                $ref: "#/components/schemas/WalletTransaction"
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, banned, suspended]
+        isVerified:
+          type: boolean
+        isBlockedFromBooking:
+          type: boolean
+
+    UserActionInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [ban, unban, suspend, unsuspend, verify, block_booking, unblock_booking, force_logout, reset_account]
+        reason:
+          type: string
+
+    WalletAdjustmentInput:
+      type: object
+      required: [amount, type, reason]
+      properties:
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [credit, debit]
+        reason:
+          type: string
+
+    WalletBalance:
+      type: object
+      required: [userId, balance]
+      properties:
+        userId:
+          type: string
+        balance:
+          type: number
+
+    UserListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    DriverDocument:
+      type: object
+      required: [id, driverId, documentType, status]
+      properties:
+        id:
+          type: string
+        driverId:
+          type: string
+        documentType:
+          type: string
+          enum: [aadhaar, driving_license, vehicle_rc, vehicle_photo, selfie]
+        fileUrl:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: string
+        verifiedAt:
+          type: string
+          format: date-time
+
+    Driver:
+      type: object
+      required: [id, name, phone, status, approvalStatus, isOnline, vehicleType, totalRides, totalEarnings, rating, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        profileImage:
+          type: string
+        status:
+          type: string
+          enum: [active, pending, suspended, banned]
+        approvalStatus:
+          type: string
+          enum: [pending, approved, rejected]
+        isOnline:
+          type: boolean
+        vehicleType:
+          type: string
+          enum: [auto, bike, cab]
+        vehicleNumber:
+          type: string
+        vehicleModel:
+          type: string
+        totalRides:
+          type: integer
+        totalEarnings:
+          type: number
+        rating:
+          type: number
+        walletBalance:
+          type: number
+        fcmToken:
+          type: string
+        lastActiveAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DriverDetail:
+      allOf:
+        - $ref: "#/components/schemas/Driver"
+        - type: object
+          properties:
+            documents:
+              type: array
+              items:
+                $ref: "#/components/schemas/DriverDocument"
+            recentRides:
+              type: array
+              items:
+                $ref: "#/components/schemas/Ride"
+
+    DriverInput:
+      type: object
+      required: [name, phone, vehicleType]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+          enum: [auto, bike, cab]
+        vehicleNumber:
+          type: string
+        vehicleModel:
+          type: string
+
+    DriverUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [active, pending, suspended, banned]
+        approvalStatus:
+          type: string
+          enum: [pending, approved, rejected]
+        vehicleType:
+          type: string
+          enum: [auto, bike, cab]
+        vehicleNumber:
+          type: string
+        vehicleModel:
+          type: string
+
+    DriverActionInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [approve, reject, suspend, unsuspend, ban, unban, force_offline]
+        reason:
+          type: string
+
+    DocumentVerificationInput:
+      type: object
+      required: [documentType, status]
+      properties:
+        documentType:
+          type: string
+          enum: [aadhaar, driving_license, vehicle_rc, vehicle_photo, selfie]
+        status:
+          type: string
+          enum: [approved, rejected]
+        rejectionReason:
+          type: string
+
+    DriverListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Driver"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Ride:
+      type: object
+      required: [id, status, fare, paymentMethod, paymentStatus, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        driverId:
+          type: string
+        userName:
+          type: string
+        userPhone:
+          type: string
+        driverName:
+          type: string
+        driverPhone:
+          type: string
+        pickupAddress:
+          type: string
+        dropAddress:
+          type: string
+        pickupLat:
+          type: number
+        pickupLng:
+          type: number
+        dropLat:
+          type: number
+        dropLng:
+          type: number
+        distanceKm:
+          type: number
+        fare:
+          type: number
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+        paymentMethod:
+          type: string
+          enum: [cash, wallet, online]
+        paymentStatus:
+          type: string
+          enum: [pending, paid, failed, refunded]
+        cancelReason:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    RideDetail:
+      allOf:
+        - $ref: "#/components/schemas/Ride"
+        - type: object
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+            driver:
+              $ref: "#/components/schemas/Driver"
+
+    RideUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+        fare:
+          type: number
+        driverId:
+          type: string
+
+    CancelRideInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+        refund:
+          type: boolean
+
+    AssignDriverInput:
+      type: object
+      required: [driverId]
+      properties:
+        driverId:
+          type: string
+
+    RideListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ride"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    PricingSettings:
+      type: object
+      required:
+        - id
+        - basePerKm
+        - minimumFare
+        - maximumFare
+        - nightChargeMultiplier
+        - nightChargeStartHour
+        - nightChargeEndHour
+        - waitingChargePerMin
+        - cancellationFee
+        - serviceRadiusKm
+        - updatedAt
+      properties:
+        id:
+          type: string
+        basePerKm:
+          type: number
+        minimumFare:
+          type: number
+        maximumFare:
+          type: number
+        nightChargeMultiplier:
+          type: number
+        nightChargeStartHour:
+          type: integer
+        nightChargeEndHour:
+          type: integer
+        waitingChargePerMin:
+          type: number
+        cancellationFee:
+          type: number
+        serviceRadiusKm:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+
+    PricingUpdate:
+      type: object
+      properties:
+        basePerKm:
+          type: number
+        minimumFare:
+          type: number
+        maximumFare:
+          type: number
+        nightChargeMultiplier:
+          type: number
+        nightChargeStartHour:
+          type: integer
+        nightChargeEndHour:
+          type: integer
+        waitingChargePerMin:
+          type: number
+        cancellationFee:
+          type: number
+        serviceRadiusKm:
+          type: number
+
+    SurgeZone:
+      type: object
+      required: [id, name, multiplier, isActive, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        multiplier:
+          type: number
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SurgeZoneInput:
+      type: object
+      required: [name, multiplier]
+      properties:
+        name:
+          type: string
+        multiplier:
+          type: number
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isActive:
+          type: boolean
+
+    SurgeZoneUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        multiplier:
+          type: number
+        startTime:
+          type: string
+        endTime:
+          type: string
+        isActive:
+          type: boolean
+
+    ServiceArea:
+      type: object
+      required: [id, name, radiusKm, centerLat, centerLng, isActive, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        radiusKm:
+          type: number
+        centerLat:
+          type: number
+        centerLng:
+          type: number
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    ServiceAreaInput:
+      type: object
+      required: [name, radiusKm, centerLat, centerLng]
+      properties:
+        name:
+          type: string
+        radiusKm:
+          type: number
+        centerLat:
+          type: number
+        centerLng:
+          type: number
+        isActive:
+          type: boolean
+
+    ServiceAreaUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        radiusKm:
+          type: number
+        centerLat:
+          type: number
+        centerLng:
+          type: number
+        isActive:
+          type: boolean
+
+    Payment:
+      type: object
+      required: [id, amount, status, method, createdAt]
+      properties:
+        id:
+          type: string
+        rideId:
+          type: string
+        userId:
+          type: string
+        driverId:
+          type: string
+        userName:
+          type: string
+        amount:
+          type: number
+        commissionAmount:
+          type: number
+        driverAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, success, failed, refunded]
+        method:
+          type: string
+          enum: [cash, wallet, online]
+        razorpayOrderId:
+          type: string
+        razorpayPaymentId:
+          type: string
+        refundId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    RefundInput:
+      type: object
+      required: [reason]
+      properties:
+        amount:
+          type: number
+        reason:
+          type: string
+
+    PaymentSummary:
+      type: object
+      required: [totalRevenue, totalCommission, totalRefunds, successCount, failedCount, refundedCount]
+      properties:
+        totalRevenue:
+          type: number
+        totalCommission:
+          type: number
+        totalRefunds:
+          type: number
+        successCount:
+          type: integer
+        failedCount:
+          type: integer
+        refundedCount:
+          type: integer
+
+    Wallet:
+      type: object
+      required: [id, userId, userName, balance, isFrozen, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+        userPhone:
+          type: string
+        balance:
+          type: number
+        isFrozen:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    WalletListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Wallet"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    WalletFreezeInput:
+      type: object
+      required: [frozen]
+      properties:
+        frozen:
+          type: boolean
+        reason:
+          type: string
+
+    WalletTransaction:
+      type: object
+      required: [id, walletId, type, amount, description, createdAt]
+      properties:
+        id:
+          type: string
+        walletId:
+          type: string
+        type:
+          type: string
+          enum: [credit, debit]
+        amount:
+          type: number
+        balance:
+          type: number
+        description:
+          type: string
+        referenceId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    WalletTransactionListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WalletTransaction"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, title, message, targetAudience, type, sentCount, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        targetAudience:
+          type: string
+          enum: [all, users, drivers, specific]
+        type:
+          type: string
+          enum: [announcement, promo, alert, reminder]
+        targetIds:
+          type: array
+          items:
+            type: string
+        sentCount:
+          type: integer
+        imageUrl:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationInput:
+      type: object
+      required: [title, message]
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        targetAudience:
+          type: string
+          enum: [all, users, drivers, specific]
+        type:
+          type: string
+          enum: [announcement, promo, alert, reminder]
+        targetIds:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+
+    NotificationListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Promo:
+      type: object
+      required: [id, code, discountType, discountValue, isActive, usedCount, createdAt]
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        discountType:
+          type: string
+          enum: [percent, flat]
+        discountValue:
+          type: number
+        minimumFare:
+          type: number
+        maximumDiscount:
+          type: number
+        usageLimit:
+          type: integer
+        usedCount:
+          type: integer
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PromoInput:
+      type: object
+      required: [code, discountType, discountValue]
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        discountType:
+          type: string
+          enum: [percent, flat]
+        discountValue:
+          type: number
+        minimumFare:
+          type: number
+        maximumDiscount:
+          type: number
+        usageLimit:
+          type: integer
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+
+    PromoUpdate:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        discountType:
+          type: string
+          enum: [percent, flat]
+        discountValue:
+          type: number
+        minimumFare:
+          type: number
+        maximumDiscount:
+          type: number
+        usageLimit:
+          type: integer
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+
+    PromoListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Promo"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    SupportTicket:
+      type: object
+      required: [id, subject, category, status, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        driverId:
+          type: string
+        rideId:
+          type: string
+        subject:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [payment_issue, ride_issue, technical_issue, driver_complaint, other]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        adminReply:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    SupportTicketInput:
+      type: object
+      required: [subject, category]
+      properties:
+        userId:
+          type: string
+        driverId:
+          type: string
+        rideId:
+          type: string
+        subject:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [payment_issue, ride_issue, technical_issue, driver_complaint, other]
+
+    SupportTicketUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        adminReply:
+          type: string
+
+    SupportTicketListResponse:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportTicket"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    SupportStats:
+      type: object
+      required: [open, inProgress, resolved, closed, total]
+      properties:
+        open:
+          type: integer
+        inProgress:
+          type: integer
+        resolved:
+          type: integer
+        closed:
+          type: integer
+        total:
+          type: integer
+
+    AppSettings:
+      type: object
+      required: [id, appName, supportNumber, commissionPercent, updatedAt]
+      properties:
+        id:
+          type: string
+        appName:
+          type: string
+        appLogoUrl:
+          type: string
+        supportNumber:
+          type: string
+        commissionPercent:
+          type: number
+        maintenanceMode:
+          type: boolean
+        registrationEnabled:
+          type: boolean
+        privacyPolicyUrl:
+          type: string
+        termsUrl:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    AppSettingsUpdate:
+      type: object
+      properties:
+        appName:
+          type: string
+        appLogoUrl:
+          type: string
+        supportNumber:
+          type: string
+        commissionPercent:
+          type: number
+        maintenanceMode:
+          type: boolean
+        registrationEnabled:
+          type: boolean
+        privacyPolicyUrl:
+          type: string
+        termsUrl:
+          type: string
+
+    PublicSettings:
+      type: object
+      required: [appName]
+      properties:
+        appName:
+          type: string
+        appLogoUrl:
+          type: string
+        privacyPolicyUrl:
+          type: string
+        termsUrl:
+          type: string
+        maintenanceMode:
+          type: boolean
+
+    Banner:
+      type: object
+      required: [id, title, imageUrl, isActive, order, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: string
+        isActive:
+          type: boolean
+        order:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    BannerInput:
+      type: object
+      required: [title, imageUrl]
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: string
+        isActive:
+          type: boolean
+        order:
+          type: integer
+
+    BannerUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: string
+        isActive:
+          type: boolean
+        order:
+          type: integer
+
+    Announcement:
+      type: object
+      required: [id, title, content, isActive, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    AnnouncementInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+
+    AnnouncementUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time

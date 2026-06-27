@@ -1,0 +1,36 @@
+# Dependencies & build output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+.expo/
+**/.expo/
+.cache/
+.local/
+
+# ── Secrets — NEVER commit ──
+.env
+**/.env
+.env.local
+**/.env.local
+.env.*.local
+*.keystore
+**/*.keystore
+credentials.json
+**/credentials.json
+
+# Large original archives (not needed for deploy)
+*.zip
+**/*.zip
+
+# Local upload scratch (production uses Cloudinary)
+**/uploads/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Claude Code harness config (may contain tokens)
+.claude/
+**/.claude/
