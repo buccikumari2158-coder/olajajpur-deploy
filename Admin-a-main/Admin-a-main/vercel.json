@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/admin-panel build",
+  "outputDirectory": "artifacts/admin-panel/dist/public",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://jajpur-admin-api.onrender.com/api/:path*" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}

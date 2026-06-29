@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1041183289049-ge0su7jo0ccvtvjuu0lt5g4pit9ac9b4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appjajpurjatri.app",
+            "certificate_hash": "d642780ad66933fc8d01d0bb95d3879fe8acaa30"
+          }
+        },
+        {
           "client_id": "1041183289049-4tr6dv1iaquvdok0398nt7nn7hpmbdf4.apps.googleusercontent.com",
           "client_type": 3
         }
