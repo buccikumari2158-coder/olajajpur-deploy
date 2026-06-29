@@ -79,6 +79,17 @@ router.post("/auth/firebase-login", async (req, res) => {
 
     let user = await User.findOne({ firebaseUid: firebaseUser.localId });
 
+    // Fall back to matching by phone so a returning user (e.g. whose Firebase
+    // UID changed) reuses their existing account instead of creating a
+    // duplicate. Phone is the real identity for this app.
+    if (!user && firebaseUser.phoneNumber) {
+      const byPhone = await User.findOne({ phone: firebaseUser.phoneNumber });
+      if (byPhone) {
+        byPhone.firebaseUid = firebaseUser.localId;
+        user = byPhone;
+      }
+    }
+
     if (!user) {
       user = new User({
         _id: randomUUID(),
@@ -93,9 +104,11 @@ router.post("/auth/firebase-login", async (req, res) => {
         driverStatus: null,
       });
       await user.save();
-    } else if (safeRole === "driver" && !user.isDriver) {
-      user.isDriver = true;
-      user.role = "driver";
+    } else {
+      if (safeRole === "driver" && !user.isDriver) {
+        user.isDriver = true;
+        user.role = "driver";
+      }
       await user.save();
     }
 
