@@ -1,42 +1,33 @@
 {
   "project_info": {
-    "project_number": "1041183289049",
-    "firebase_url": "https://jajpur-jatri-30099-default-rtdb.firebaseio.com",
-    "project_id": "jajpur-jatri-30099",
-    "storage_bucket": "jajpur-jatri-30099.firebasestorage.app"
+    "project_number": "63473197506",
+    "project_id": "ola-app-404f7",
+    "storage_bucket": "ola-app-404f7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1041183289049:android:a7836e7749f83337e7d8c8",
+        "mobilesdk_app_id": "1:63473197506:android:e21618873201940d68765b",
         "android_client_info": {
           "package_name": "com.appjajpurjatri.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1041183289049-ge0su7jo0ccvtvjuu0lt5g4pit9ac9b4.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.appjajpurjatri.app",
-            "certificate_hash": "d642780ad66933fc8d01d0bb95d3879fe8acaa30"
-          }
-        },
-        {
-          "client_id": "1041183289049-4tr6dv1iaquvdok0398nt7nn7hpmbdf4.apps.googleusercontent.com",
+          "client_id": "63473197506-cf8a4vfhkf1a1qalsk5n99tkp49jpvju.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCQTHWzyLl_wqWxQflRk54t-vKkdmbyj_M"
+          "current_key": "AIzaSyCL_IY4Fa7KIyIWodyT2KI8AVGkEaABMG0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1041183289049-4tr6dv1iaquvdok0398nt7nn7hpmbdf4.apps.googleusercontent.com",
+              "client_id": "63473197506-cf8a4vfhkf1a1qalsk5n99tkp49jpvju.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
