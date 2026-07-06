@@ -18,9 +18,10 @@ function enrichUser(u: any) {
   const base = docToPlain(u);
   return {
     ...base,
-    name: base.name ?? null,
-    phone: base.phone ?? null,
-    email: base.email ?? null,
+    // never null — the admin UI calls .toLowerCase()/.includes() on these
+    name: base.name ?? base.phone ?? "Unknown",
+    phone: base.phone ?? "",
+    email: base.email ?? "",
     profileImage: base.photo ?? base.profileImage ?? null,
     status: base.status ?? "active",
     isVerified: base.isVerified ?? true,
