@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { NotificationModel, docToPlain, parseObjectId } from "@workspace/db";
 import { authMiddleware } from "../lib/auth";
+import { sendOneSignal } from "../lib/onesignal";
 
 const router: IRouter = Router();
 
@@ -18,13 +19,28 @@ router.get("/notifications", authMiddleware, async (req, res): Promise<void> => 
 router.post("/notifications", authMiddleware, async (req, res): Promise<void> => {
   const { title, message, targetAudience, type, targetIds, imageUrl, scheduledAt } = req.body;
   if (!title || !message) { res.status(400).json({ error: "Title and message required" }); return; }
+
+  // Deliver via OneSignal now (unless scheduled for later)
+  let recipients = 0;
+  if (!scheduledAt) {
+    const ids: string[] = Array.isArray(targetIds) ? targetIds.map(String) : [];
+    const result = await sendOneSignal({
+      externalIds: ids.length > 0 ? ids : undefined,
+      heading: title,
+      content: message,
+      imageUrl: imageUrl ?? null,
+      data: { type: type ?? "announcement", audience: targetAudience ?? "all" },
+    });
+    recipients = result.recipients ?? 0;
+  }
+
   const notif = await NotificationModel.create({
     title,
     message,
     targetAudience: targetAudience ?? "all",
     type: type ?? "announcement",
     targetIds: targetIds ?? [],
-    sentCount: 1,
+    sentCount: recipients || 1,
     imageUrl: imageUrl ?? null,
     scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
   });

@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { Ride, Driver, User, WalletTransaction } from "@workspace/db";
 import { requireAuth } from "../middleware/requireAuth";
 import { broadcastRideRequest } from "../socket";
+import { sendOneSignal } from "../lib/onesignal";
 
 async function sendPush(token: string, title: string, body: string): Promise<void> {
   try {
@@ -281,6 +282,12 @@ router.post("/rides/:id/accept", requireAuth, async (req, res) => {
   if (passenger?.pushToken) {
     await sendPush(passenger.pushToken, "Driver Found! 🚗", "Your driver is on the way. Share the OTP when they arrive.");
   }
+  await sendOneSignal({
+    externalIds: [String(ride.passengerId)],
+    heading: "Driver Found! 🚗",
+    content: "Your driver is on the way. Share the OTP when they arrive.",
+    data: { type: "ride_accepted", rideId: id },
+  });
 
   res.json({ message: "Ride accepted", rideId: id, status: "assigned" });
 });
@@ -313,6 +320,12 @@ router.post("/rides/:id/arrived", requireAuth, async (req, res) => {
   if (passenger?.pushToken) {
     await sendPush(passenger.pushToken, "Driver Arrived 📍", `Your driver has arrived at the pickup point. OTP: ${ride.otp}`);
   }
+  await sendOneSignal({
+    externalIds: [String(ride.passengerId)],
+    heading: "Driver Arrived 📍",
+    content: `Your driver is at the pickup point. OTP: ${ride.otp}`,
+    data: { type: "ride_arrived", rideId: id },
+  });
 
   res.json({ message: "Driver arrived", rideId: id, status: "arrived" });
 });
@@ -361,15 +374,32 @@ router.post("/rides/:id/complete", requireAuth, async (req, res) => {
     }).save();
   }
 
+  let driverUserId: string | null = null;
   if (ride.driverId) {
     await Driver.findByIdAndUpdate(ride.driverId, { $inc: { totalRides: 1 } });
     const driverDoc = await Driver.findById(ride.driverId).select("userId").lean();
     if (driverDoc) {
+      driverUserId = String(driverDoc.userId);
       const driverUser = await User.findById(driverDoc.userId).select("pushToken").lean();
       if (driverUser?.pushToken) {
         await sendPush(driverUser.pushToken, "Ride Completed ✅", `₹${ride.fare} earned. Great job!`);
       }
     }
+  }
+
+  await sendOneSignal({
+    externalIds: [String(ride.passengerId)],
+    heading: "Ride Completed ✅",
+    content: `Thanks for riding! Fare ₹${ride.fare}.`,
+    data: { type: "ride_completed", rideId: id },
+  });
+  if (driverUserId) {
+    await sendOneSignal({
+      externalIds: [driverUserId],
+      heading: "Ride Completed ✅",
+      content: `₹${ride.fare} earned. Great job!`,
+      data: { type: "ride_completed", rideId: id },
+    });
   }
 
   const passenger = await User.findById(ride.passengerId).select("pushToken").lean();

@@ -3,6 +3,7 @@ import { Server, type Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { Driver, Ride } from "@workspace/db";
 import { logger } from "./lib/logger";
+import { sendOneSignal } from "./lib/onesignal";
 
 interface AuthPayload {
   sub: string;
@@ -25,7 +26,9 @@ export async function broadcastRideRequest(ride: {
 }) {
   if (!_io) return;
   try {
-    const onlineDrivers = await Driver.find({ isOnline: true }).select("_id").lean();
+    const onlineDrivers = await Driver.find({ isOnline: true, status: "approved" })
+      .select("_id userId")
+      .lean();
 
     for (const driver of onlineDrivers) {
       _io.to(`driver:${driver._id}`).emit("ride:new_request", {
@@ -37,6 +40,14 @@ export async function broadcastRideRequest(ride: {
         vehicleType: ride.vehicleType,
       });
     }
+
+    // Push to online drivers via OneSignal
+    await sendOneSignal({
+      externalIds: onlineDrivers.map((d) => String(d.userId)),
+      heading: "New ride request 🚗",
+      content: `${ride.pickupAddress} → ${ride.dropAddress} · ₹${ride.fare}`,
+      data: { type: "ride_request", rideId: ride.id },
+    });
     logger.info({ rideId: ride.id, drivers: onlineDrivers.length }, "Ride request broadcast");
   } catch (err) {
     logger.error({ err }, "broadcastRideRequest failed");
