@@ -12,6 +12,25 @@ import { authMiddleware } from "../lib/auth";
 
 const router: IRouter = Router();
 
+// App users only store phone/name/role/walletBalance/isDriver/driverStatus.
+// Fill in the admin-facing fields with sensible defaults.
+function enrichUser(u: any) {
+  const base = docToPlain(u);
+  return {
+    ...base,
+    name: base.name ?? null,
+    phone: base.phone ?? null,
+    email: base.email ?? null,
+    profileImage: base.photo ?? base.profileImage ?? null,
+    status: base.status ?? "active",
+    isVerified: base.isVerified ?? true,
+    isBlockedFromBooking: base.isBlockedFromBooking ?? false,
+    totalRides: base.totalRides ?? 0,
+    totalSpending: base.totalSpending ?? 0,
+    walletBalance: base.walletBalance ?? 0,
+  };
+}
+
 router.get("/users", authMiddleware, async (req, res): Promise<void> => {
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 20);
@@ -27,28 +46,27 @@ router.get("/users", authMiddleware, async (req, res): Promise<void> => {
     UserModel.countDocuments(filter),
     UserModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
   ]);
-  res.json({ data: users.map(docToPlain), total, page, limit });
+  res.json({ data: users.map(enrichUser), total, page, limit });
 });
 
 router.get("/users/:id", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
-  const userDoc = await UserModel.findById(oid).lean();
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  const userDoc = await UserModel.findById(id).lean();
   if (!userDoc) { res.status(404).json({ error: "User not found" }); return; }
-  const user = docToPlain(userDoc);
   const [recentRides, walletDoc] = await Promise.all([
-    RideModel.find({ userId: oid }).sort({ createdAt: -1 }).limit(10).lean(),
-    WalletModel.findOne({ userId: oid }).lean(),
+    RideModel.find({ $or: [{ passengerId: id }, { userId: id }] }).sort({ createdAt: -1 }).limit(10).lean(),
+    WalletModel.findOne({ userId: id }).lean(),
   ]);
   const walletTransactions = walletDoc
     ? (await WalletTransactionModel.find({ walletId: (walletDoc as any)._id }).sort({ createdAt: -1 }).limit(10).lean()).map(docToPlain)
     : [];
-  res.json({ ...user, recentRides: recentRides.map(docToPlain), walletTransactions });
+  res.json({ ...enrichUser(userDoc), recentRides: recentRides.map(docToPlain), walletTransactions });
 });
 
 router.patch("/users/:id", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
   const { name, email, status, isVerified, isBlockedFromBooking } = req.body;
   const updates: Record<string, any> = {};
   if (name !== undefined) updates.name = name;
@@ -56,22 +74,22 @@ router.patch("/users/:id", authMiddleware, async (req, res): Promise<void> => {
   if (status !== undefined) updates.status = status;
   if (isVerified !== undefined) updates.isVerified = isVerified;
   if (isBlockedFromBooking !== undefined) updates.isBlockedFromBooking = isBlockedFromBooking;
-  const updated = await UserModel.findByIdAndUpdate(oid, { $set: updates }, { new: true }).lean();
+  const updated = await UserModel.findByIdAndUpdate(id, { $set: updates }, { new: true }).lean();
   if (!updated) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(docToPlain(updated));
+  res.json(enrichUser(updated));
 });
 
 router.delete("/users/:id", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
-  const deleted = await UserModel.findByIdAndDelete(oid).lean();
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  const deleted = await UserModel.findByIdAndDelete(id).lean();
   if (!deleted) { res.status(404).json({ error: "User not found" }); return; }
   res.sendStatus(204);
 });
 
 router.post("/users/:id/action", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
   const { action } = req.body;
   let updates: Record<string, any> = {};
   switch (action) {
@@ -87,36 +105,36 @@ router.post("/users/:id/action", authMiddleware, async (req, res): Promise<void>
     default: res.status(400).json({ error: "Invalid action" }); return;
   }
   if (Object.keys(updates).length > 0) {
-    await UserModel.findByIdAndUpdate(oid, { $set: updates });
+    await UserModel.findByIdAndUpdate(id, { $set: updates });
   }
-  await ActivityLogModel.create({ type: "user_action", message: `Admin performed '${action}' on user ${req.params.id}` });
-  const user = docToPlain(await UserModel.findById(oid).lean());
+  await ActivityLogModel.create({ type: "user_action", message: `Admin performed '${action}' on user ${id}` });
+  const user = await UserModel.findById(id).lean();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(user);
+  res.json(enrichUser(user));
 });
 
 router.get("/users/:id/rides", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
-  const rides = await RideModel.find({ userId: oid }).sort({ createdAt: -1 }).limit(20).lean();
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  const rides = await RideModel.find({ $or: [{ passengerId: id }, { userId: id }] }).sort({ createdAt: -1 }).limit(20).lean();
   res.json({ data: rides.map(docToPlain), total: rides.length, page: 1, limit: 20 });
 });
 
 router.post("/users/:id/wallet-adjustment", authMiddleware, async (req, res): Promise<void> => {
-  const oid = parseObjectId(req.params.id as string);
-  if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
+  const id = parseObjectId(req.params.id as string);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
   const { amount, type, reason } = req.body;
-  const userDoc = await UserModel.findById(oid).lean();
+  const userDoc = await UserModel.findById(id).lean();
   if (!userDoc) { res.status(404).json({ error: "User not found" }); return; }
   const user = docToPlain(userDoc);
   const delta = type === "credit" ? Math.abs(amount) : -Math.abs(amount);
   const newBalance = (user.walletBalance ?? 0) + delta;
-  await UserModel.findByIdAndUpdate(oid, { $set: { walletBalance: newBalance } });
-  let walletDoc = await WalletModel.findOne({ userId: oid }).lean();
+  await UserModel.findByIdAndUpdate(id, { $set: { walletBalance: newBalance } });
+  let walletDoc: any = await WalletModel.findOne({ userId: id }).lean();
   if (!walletDoc) {
-    walletDoc = await WalletModel.create({ userId: oid, balance: newBalance, isFrozen: false });
+    walletDoc = await WalletModel.create({ userId: id, balance: newBalance, isFrozen: false });
   } else {
-    walletDoc = await WalletModel.findOneAndUpdate({ userId: oid }, { $set: { balance: newBalance } }, { new: true }).lean();
+    walletDoc = await WalletModel.findOneAndUpdate({ userId: id }, { $set: { balance: newBalance } }, { new: true }).lean();
   }
   await WalletTransactionModel.create({
     walletId: (walletDoc as any)!._id,
@@ -125,7 +143,7 @@ router.post("/users/:id/wallet-adjustment", authMiddleware, async (req, res): Pr
     balance: newBalance,
     description: reason ?? `Admin ${type}`,
   });
-  res.json({ userId: req.params.id, balance: newBalance });
+  res.json({ userId: id, balance: newBalance });
 });
 
 export default router;

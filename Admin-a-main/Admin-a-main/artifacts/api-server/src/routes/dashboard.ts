@@ -42,7 +42,7 @@ router.get("/dashboard/stats", authMiddleware, async (_req, res): Promise<void> 
     RideModel.countDocuments({ status: "active" }),
     RideModel.countDocuments({ status: "completed" }),
     RideModel.countDocuments({ status: "cancelled" }),
-    DriverModel.countDocuments({ approvalStatus: "pending" }),
+    DriverModel.countDocuments({ status: "pending" }),
     SupportTicketModel.countDocuments(),
     NotificationModel.countDocuments(),
     WalletTransactionModel.countDocuments(),

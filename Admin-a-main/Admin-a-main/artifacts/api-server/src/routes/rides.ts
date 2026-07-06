@@ -40,11 +40,15 @@ router.get("/rides", authMiddleware, async (req, res): Promise<void> => {
   const enriched = await Promise.all(
     rides.map(async (ride: any) => {
       const r = docToPlain(ride);
-      const [userDoc, driverDoc] = await Promise.all([
-        ride.userId ? UserModel.findById(ride.userId).select("name").lean() : null,
-        ride.driverId ? DriverModel.findById(ride.driverId).select("name").lean() : null,
-      ]);
-      return { ...r, userName: (userDoc as any)?.name ?? null, driverName: (driverDoc as any)?.name ?? null };
+      const passengerId = ride.passengerId ?? ride.userId;
+      const userDoc: any = passengerId ? await UserModel.findById(passengerId).lean() : null;
+      let driverName: string | null = null;
+      if (ride.driverId) {
+        const drv: any = await DriverModel.findById(ride.driverId).lean();
+        const drvUser: any = drv?.userId ? await UserModel.findById(drv.userId).lean() : null;
+        driverName = drvUser?.name ?? drv?.fullName ?? drv?.name ?? null;
+      }
+      return { ...r, userId: passengerId ?? null, userName: userDoc?.name ?? null, driverName };
     }),
   );
   res.json({ data: enriched, total, page, limit });
@@ -56,8 +60,9 @@ router.get("/rides/:id", authMiddleware, async (req, res): Promise<void> => {
   const rideDoc = await RideModel.findById(oid).lean();
   if (!rideDoc) { res.status(404).json({ error: "Ride not found" }); return; }
   const ride = docToPlain(rideDoc);
+  const passengerId = (rideDoc as any).passengerId ?? (rideDoc as any).userId;
   const [userDoc, driverDoc] = await Promise.all([
-    (rideDoc as any).userId ? UserModel.findById((rideDoc as any).userId).lean() : null,
+    passengerId ? UserModel.findById(passengerId).lean() : null,
     (rideDoc as any).driverId ? DriverModel.findById((rideDoc as any).driverId).lean() : null,
   ]);
   const user = userDoc ? docToPlain(userDoc) : null;

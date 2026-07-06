@@ -22,12 +22,10 @@ export function docToPlain(doc: any): any {
   return obj;
 }
 
-export function parseObjectId(id: string): Schema.Types.ObjectId | null {
-  try {
-    return new Schema.Types.ObjectId(id);
-  } catch {
-    return null;
-  }
+// IDs across this system are strings (UUIDs from the user app). Just validate
+// and pass through; the models use String _id so findById(string) works.
+export function parseObjectId(id: string): string | null {
+  return id && typeof id === "string" ? id : null;
 }
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
@@ -50,10 +48,15 @@ export const AdminModel =
 
 const UserSchema = new Schema(
   {
-    name: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
+    _id: { type: String },
+    name: String,
+    phone: String,
     email: String,
+    photo: String,
     profileImage: String,
+    role: String,
+    isDriver: Boolean,
+    driverStatus: String,
     status: { type: String, default: "active" },
     isVerified: { type: Boolean, default: false },
     isBlockedFromBooking: { type: Boolean, default: false },
@@ -64,7 +67,7 @@ const UserSchema = new Schema(
     fcmToken: String,
     lastActiveAt: Date,
   },
-  { timestamps: true, collection: "users" },
+  { timestamps: true, collection: "users", strict: false },
 );
 export const UserModel =
   (mongoose.models["User"] as mongoose.Model<any>) ??
@@ -74,11 +77,22 @@ export const UserModel =
 
 const DriverSchema = new Schema(
   {
-    name: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
+    _id: { type: String },
+    userId: { type: String },
+    name: String,
+    fullName: String,
+    phone: String,
     email: String,
+    address: String,
+    photo: String,
     profileImage: String,
-    status: { type: String, default: "active" },
+    driverPhotoUrl: String,
+    licenseUrl: String,
+    aadhaarUrl: String,
+    vehicleRcUrl: String,
+    vehiclePhotoUrl: String,
+    vehicleModel: String,
+    status: { type: String, default: "pending" },
     approvalStatus: { type: String, default: "pending" },
     isOnline: { type: Boolean, default: false },
     vehicleType: { type: String, default: "auto" },
@@ -86,12 +100,14 @@ const DriverSchema = new Schema(
     totalRides: { type: Number, default: 0 },
     totalEarnings: { type: Number, default: 0 },
     rating: { type: Number, default: 0 },
+    currentLat: Number,
+    currentLng: Number,
     currentLatitude: Number,
     currentLongitude: Number,
     fcmToken: String,
     lastActiveAt: Date,
   },
-  { timestamps: true, collection: "drivers" },
+  { timestamps: true, collection: "drivers", strict: false },
 );
 export const DriverModel =
   (mongoose.models["Driver"] as mongoose.Model<any>) ??
@@ -118,11 +134,17 @@ export const DriverDocumentModel =
 
 const RideSchema = new Schema(
   {
+    _id: { type: String },
     status: { type: String, default: "pending" },
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    driverId: { type: Schema.Types.ObjectId, ref: "Driver" },
-    pickupAddress: { type: String, required: true },
-    dropAddress: { type: String, required: true },
+    userId: { type: String },
+    passengerId: { type: String },
+    driverId: { type: String },
+    pickupAddress: String,
+    dropAddress: String,
+    pickupLat: Number,
+    pickupLng: Number,
+    dropLat: Number,
+    dropLng: Number,
     pickupLatitude: Number,
     pickupLongitude: Number,
     dropLatitude: Number,
@@ -130,14 +152,16 @@ const RideSchema = new Schema(
     fare: { type: Number, default: 0 },
     distance: { type: Number, default: 0 },
     duration: Number,
+    vehicleType: String,
     paymentMethod: { type: String, default: "cash" },
     paymentStatus: { type: String, default: "pending" },
+    rating: Number,
     cancelledBy: String,
     cancellationReason: String,
     startedAt: Date,
     completedAt: Date,
   },
-  { timestamps: true, collection: "rides" },
+  { timestamps: true, collection: "rides", strict: false },
 );
 export const RideModel =
   (mongoose.models["Ride"] as mongoose.Model<any>) ??
@@ -169,11 +193,11 @@ export const PaymentModel =
 
 const WalletSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, required: true, unique: true, ref: "User" },
+    userId: { type: String },
     balance: { type: Number, default: 0 },
     isFrozen: { type: Boolean, default: false },
   },
-  { timestamps: true, collection: "wallets" },
+  { timestamps: true, collection: "wallets", strict: false },
 );
 export const WalletModel =
   (mongoose.models["Wallet"] as mongoose.Model<any>) ??
