@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { registerForPushNotifications } from "@/lib/notifications";
+import { oneSignalLogin, oneSignalLogout } from "@/lib/onesignal";
 
 interface User {
   id: string;
@@ -47,8 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         AsyncStorage.getItem("auth_user"),
       ]);
       if (storedToken && storedUser) {
+        const parsed = JSON.parse(storedUser) as User;
         setToken(storedToken);
-        setUser(JSON.parse(storedUser) as User);
+        setUser(parsed);
+        oneSignalLogin(parsed.id);
       }
     } catch {
       // ignore
@@ -64,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setToken(newToken);
     setUser(newUser);
+    oneSignalLogin(newUser.id);
 
     // Register push token after login (non-blocking, native only)
     registerForPushNotifications().then(async (pushToken) => {
@@ -88,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setToken(null);
     setUser(null);
+    oneSignalLogout();
   }
 
   function updateUser(updates: Partial<User>) {

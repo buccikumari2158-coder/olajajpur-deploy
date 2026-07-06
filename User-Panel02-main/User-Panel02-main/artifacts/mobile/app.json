@@ -52,6 +52,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Jajpur Jatri to use your location."
         }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development"
+        }
       ]
     ],
     "experiments": {

@@ -15,6 +15,8 @@ const WEB_STUBS = {
   "react-native-maps": path.resolve(__dirname, "shims/react-native-maps.web.tsx"),
   // expo-firebase-recaptcha relies on a native WebView modal; stub it on web
   "expo-firebase-recaptcha": path.resolve(__dirname, "shims/expo-firebase-recaptcha.web.tsx"),
+  // react-native-onesignal is a native SDK; stub it on web
+  "react-native-onesignal": path.resolve(__dirname, "shims/onesignal.web.ts"),
 };
 
 const originalResolveRequest = config.resolver.resolveRequest;
