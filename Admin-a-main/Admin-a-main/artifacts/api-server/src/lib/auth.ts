@@ -15,12 +15,15 @@ export async function authMiddleware(
   try {
     const token = authHeader.slice(7);
     const decoded = await firebaseAdmin.verifyIdToken(token);
-    const email = decoded.email;
+    const email = decoded.email?.toLowerCase();
     if (!email) {
       res.status(401).json({ error: "Invalid token: no email" });
       return;
     }
-    const adminDoc = await AdminModel.findOne({ email }).lean();
+    // Case-insensitive match: admin emails are stored lowercase.
+    const adminDoc = await AdminModel.findOne({
+      email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+    }).lean();
     const admin = docToPlain(adminDoc);
     if (!admin || !admin.isActive) {
       res.status(403).json({ error: "Not an authorized admin" });
