@@ -104,9 +104,9 @@ export default function DriverDashboardScreen() {
       }, 1000);
     }
 
-    socket?.on("ride:request", onRideRequest);
+    socket?.on("ride:new_request", onRideRequest);
     return () => {
-      socket?.off("ride:request", onRideRequest);
+      socket?.off("ride:new_request", onRideRequest);
       if (requestTimer.current) clearInterval(requestTimer.current);
     };
   }, [socket, profile?.id]);

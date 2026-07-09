@@ -31,14 +31,17 @@ export async function broadcastRideRequest(ride: {
       .lean();
 
     for (const driver of onlineDrivers) {
-      _io.to(`driver:${driver._id}`).emit("ride:new_request", {
+      const payload = {
         rideId: ride.id,
         pickupAddress: ride.pickupAddress,
         dropAddress: ride.dropAddress,
         fare: ride.fare,
         distance: ride.distance,
         vehicleType: ride.vehicleType,
-      });
+      };
+      // Emit both event names for backward compatibility with older app builds
+      _io.to(`driver:${driver._id}`).emit("ride:new_request", payload);
+      _io.to(`driver:${driver._id}`).emit("ride:request", payload);
     }
 
     // Push to online drivers via OneSignal

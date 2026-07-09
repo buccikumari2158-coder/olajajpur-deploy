@@ -347,6 +347,9 @@ router.post("/rides/:id/start", requireAuth, async (req, res) => {
 
   await Ride.findByIdAndUpdate(id, { $set: { status: "in_progress" } });
 
+  const io = (await import("../socket")).getIo();
+  io?.to(`ride:${id}`).emit("ride:started", { rideId: id });
+
   res.json({ ...ride, id: ride._id, status: "in_progress" });
 });
 
@@ -406,6 +409,9 @@ router.post("/rides/:id/complete", requireAuth, async (req, res) => {
   if (passenger?.pushToken) {
     await sendPush(passenger.pushToken, "Ride Completed 🎉", `Your ride to ${(ride.dropAddress ?? "destination").slice(0, 40)} is complete. Rate your driver!`);
   }
+
+  const io = (await import("../socket")).getIo();
+  io?.to(`ride:${id}`).emit("ride:completed", { rideId: id, fare: ride.fare });
 
   res.json({ ...ride, id: ride._id, status: "completed" });
 });
