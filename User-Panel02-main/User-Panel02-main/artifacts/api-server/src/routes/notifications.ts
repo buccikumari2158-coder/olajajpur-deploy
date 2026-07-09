@@ -1,5 +1,5 @@
 import { Router } from "express";
-import mongoose from "mongoose";
+import { User } from "@workspace/db";
 import { requireAuth } from "../middleware/requireAuth";
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
 router.get("/notifications", requireAuth, async (req, res) => {
   const userId = req.auth!.sub;
   try {
-    const coll = mongoose.connection.collection("notifications");
+    const coll = (User as unknown as { db: { collection: (n: string) => any } }).db.collection("notifications");
     const items = await coll
       .find({
         $or: [
