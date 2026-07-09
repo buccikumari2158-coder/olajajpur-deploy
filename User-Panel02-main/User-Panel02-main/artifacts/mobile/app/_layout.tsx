@@ -46,6 +46,7 @@ function RootLayoutNav() {
       <Stack.Screen name="ride" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="legal" />
+      <Stack.Screen name="notifications" />
     </Stack>
   );
 }

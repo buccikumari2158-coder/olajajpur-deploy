@@ -198,7 +198,10 @@ export default function HomeScreen() {
           <Image source={require("../../assets/images/icon.png")} style={styles.headerLogo} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>JAJPUR JATRI</Text>
         </View>
-        <TouchableOpacity style={[styles.headerRight, { backgroundColor: colors.secondary }]}>
+        <TouchableOpacity
+          style={[styles.headerRight, { backgroundColor: colors.secondary }]}
+          onPress={() => router.push("/notifications")}
+        >
           <Feather name="bell" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
