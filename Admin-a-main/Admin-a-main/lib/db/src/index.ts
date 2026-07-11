@@ -28,6 +28,17 @@ export function parseObjectId(id: string): string | null {
   return id && typeof id === "string" ? id : null;
 }
 
+// Find a doc by string _id (new app data) OR legacy ObjectId _id (old test
+// data). Bypasses mongoose casting via the raw collection for the ObjectId case.
+export async function findByAnyId(model: any, id: string): Promise<any> {
+  const doc = await model.findById(id).lean();
+  if (doc) return doc;
+  if (/^[0-9a-fA-F]{24}$/.test(id)) {
+    return model.collection.findOne({ _id: new Types.ObjectId(id) });
+  }
+  return null;
+}
+
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
 const AdminSchema = new Schema(
@@ -117,14 +128,14 @@ export const DriverModel =
 
 const DriverDocumentSchema = new Schema(
   {
-    driverId: { type: Schema.Types.ObjectId, required: true, ref: "Driver" },
+    driverId: { type: String },
     documentType: { type: String, required: true },
     fileUrl: String,
     status: { type: String, default: "pending" },
     rejectionReason: String,
     verifiedAt: Date,
   },
-  { timestamps: { createdAt: true, updatedAt: false }, collection: "driver_documents" },
+  { timestamps: { createdAt: true, updatedAt: false }, collection: "driver_documents", strict: false },
 );
 export const DriverDocumentModel =
   (mongoose.models["DriverDocument"] as mongoose.Model<any>) ??
@@ -171,9 +182,9 @@ export const RideModel =
 
 const PaymentSchema = new Schema(
   {
-    rideId: { type: Schema.Types.ObjectId, ref: "Ride" },
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    driverId: { type: Schema.Types.ObjectId, ref: "Driver" },
+    rideId: { type: String },
+    userId: { type: String },
+    driverId: { type: String },
     amount: { type: Number, default: 0 },
     commissionAmount: { type: Number, default: 0 },
     driverAmount: { type: Number, default: 0 },
@@ -183,7 +194,7 @@ const PaymentSchema = new Schema(
     razorpayPaymentId: String,
     refundId: String,
   },
-  { timestamps: true, collection: "payments" },
+  { timestamps: true, collection: "payments", strict: false },
 );
 export const PaymentModel =
   (mongoose.models["Payment"] as mongoose.Model<any>) ??
@@ -264,9 +275,9 @@ export const PromoModel =
 
 const SupportTicketSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    driverId: { type: Schema.Types.ObjectId, ref: "Driver" },
-    rideId: { type: Schema.Types.ObjectId, ref: "Ride" },
+    userId: { type: String },
+    driverId: { type: String },
+    rideId: { type: String },
     reporterName: String,
     reporterPhone: String,
     subject: { type: String, required: true },
@@ -276,7 +287,7 @@ const SupportTicketSchema = new Schema(
     adminReply: String,
     resolvedAt: Date,
   },
-  { timestamps: true, collection: "support_tickets" },
+  { timestamps: true, collection: "support_tickets", strict: false },
 );
 export const SupportTicketModel =
   (mongoose.models["SupportTicket"] as mongoose.Model<any>) ??

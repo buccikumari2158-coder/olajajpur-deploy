@@ -6,6 +6,7 @@ import {
   ActivityLogModel,
   docToPlain,
   parseObjectId,
+  findByAnyId,
 } from "@workspace/db";
 import { authMiddleware } from "../lib/auth";
 
@@ -57,7 +58,7 @@ router.get("/rides", authMiddleware, async (req, res): Promise<void> => {
 router.get("/rides/:id", authMiddleware, async (req, res): Promise<void> => {
   const oid = parseObjectId(req.params.id as string);
   if (!oid) { res.status(400).json({ error: "Invalid id" }); return; }
-  const rideDoc = await RideModel.findById(oid).lean();
+  const rideDoc = await findByAnyId(RideModel, oid);
   if (!rideDoc) { res.status(404).json({ error: "Ride not found" }); return; }
   const ride = docToPlain(rideDoc);
   const passengerId = (rideDoc as any).passengerId ?? (rideDoc as any).userId;

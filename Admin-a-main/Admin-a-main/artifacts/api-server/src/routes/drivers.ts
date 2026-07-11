@@ -7,6 +7,7 @@ import {
   ActivityLogModel,
   docToPlain,
   parseObjectId,
+  findByAnyId,
 } from "@workspace/db";
 import { authMiddleware } from "../lib/auth";
 
@@ -88,10 +89,10 @@ router.get("/drivers/pending-approvals", authMiddleware, async (_req, res): Prom
 router.get("/drivers/:id", authMiddleware, async (req, res): Promise<void> => {
   const id = parseObjectId(req.params.id as string);
   if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
-  const driverDoc = await DriverModel.findById(id).lean();
+  const driverDoc = await findByAnyId(DriverModel, id);
   if (!driverDoc) { res.status(404).json({ error: "Driver not found" }); return; }
   const user = (driverDoc as any).userId
-    ? await UserModel.findById((driverDoc as any).userId).lean()
+    ? await findByAnyId(UserModel, String((driverDoc as any).userId))
     : null;
   const [documents, recentRides] = await Promise.all([
     DriverDocumentModel.find({ driverId: id }).lean(),
