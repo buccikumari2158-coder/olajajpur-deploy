@@ -20,7 +20,8 @@ async function sendPush(token: string, title: string, body: string): Promise<voi
 const router = Router();
 
 function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  // 4-digit OTP to match the driver's 4-box entry field on the ride screen
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 router.post("/rides", requireAuth, async (req, res) => {
