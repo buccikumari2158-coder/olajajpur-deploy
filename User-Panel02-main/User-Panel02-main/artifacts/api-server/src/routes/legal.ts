@@ -2,6 +2,13 @@ import { Router } from "express";
 
 const router = Router();
 
+// Published policy pages — shown via the "Open Full …" button in the app.
+const EXTERNAL_URLS: Record<string, string> = {
+  terms: "https://www.odialifehub.in/p/terms-conditions-for-jajpur-jatri.html",
+  privacy: "https://www.odialifehub.in/p/privacy-policy-for-jajpur-jatri.html",
+  refund: "https://www.odialifehub.in/p/jajpur-jatri-refund-cancellation-policy.html",
+};
+
 const LEGAL_DOCS: Record<string, { title: string; body: string }> = {
   terms: {
     title: "Terms & Conditions",
@@ -64,6 +71,30 @@ We use industry-standard encryption for all data in transit. Passwords are hashe
 7. CONTACT
 For privacy questions, contact jajpurjatri@gmail.com or call +91 9583789411.`,
   },
+  refund: {
+    title: "Refund & Cancellation Policy",
+    body: `This policy explains cancellations and refunds for Jajpur Jatri rides and wallet payments.
+
+1. RIDE CANCELLATION
+You may cancel a ride free of charge before a driver is assigned. Once a driver has been assigned and is on the way, a cancellation fee may apply.
+
+2. CANCELLATION FEE
+A cancellation fee of up to ₹25 may be charged if you cancel after a driver has started travelling to your pickup point.
+
+3. DRIVER CANCELLATION
+If a driver cancels, you are not charged. Any amount already deducted is credited back to your wallet.
+
+4. WALLET REFUNDS
+Amounts deducted in error are credited back to your Jajpur Jatri wallet, usually within 24 hours.
+
+5. ONLINE PAYMENT REFUNDS
+Refunds for online payments are processed to the original payment method and may take 5-7 working days depending on your bank.
+
+6. DISPUTES
+Raise any fare or payment dispute within 24 hours of the ride through the app's Support section.
+
+For refund queries, contact jajpurjatri@gmail.com or call +91 9583789411.`,
+  },
 };
 
 router.get("/legal/:slug", (req, res) => {
@@ -77,7 +108,7 @@ router.get("/legal/:slug", (req, res) => {
     slug,
     title: doc.title,
     body: doc.body,
-    externalUrl: `https://jajpurjatri.in/legal/${slug}`,
+    externalUrl: EXTERNAL_URLS[slug] ?? null,
   });
 });
 
