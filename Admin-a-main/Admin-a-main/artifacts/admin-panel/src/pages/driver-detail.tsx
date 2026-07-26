@@ -187,7 +187,14 @@ export default function DriverDetail({ id }: { id: string }) {
                       {doc?.status ?? "Missing"}
                     </Badge>
                   </div>
-                  {doc?.status !== "approved" && (
+                  {doc?.fileUrl ? (
+                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="block">
+                      <img src={doc.fileUrl} alt={label} className="w-full h-28 object-cover rounded-md border border-white/10 hover:opacity-90" />
+                    </a>
+                  ) : (
+                    <div className="w-full h-28 rounded-md border border-dashed border-white/10 flex items-center justify-center text-xs text-muted-foreground">Not uploaded</div>
+                  )}
+                  {doc?.status !== "approved" && doc?.fileUrl && (
                     <Button size="sm" className="w-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 text-xs" onClick={() => handleDocVerify(type, "approved")} disabled={verifyDoc.isPending} data-testid={`button-approve-doc-${type}`}>
                       <CheckCircle className="w-3 h-3 mr-1" /> Approve
                     </Button>

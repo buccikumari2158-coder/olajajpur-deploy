@@ -94,13 +94,32 @@ router.get("/drivers/:id", authMiddleware, async (req, res): Promise<void> => {
   const user = (driverDoc as any).userId
     ? await findByAnyId(UserModel, String((driverDoc as any).userId))
     : null;
-  const [documents, recentRides] = await Promise.all([
+  const [docRecords, recentRides] = await Promise.all([
     DriverDocumentModel.find({ driverId: id }).lean(),
     RideModel.find({ driverId: id }).sort({ createdAt: -1 }).limit(10).lean(),
   ]);
+  // The app stores doc image URLs directly on the driver record. Build the
+  // documents list from those, using any saved verification status.
+  const statusByType = new Map<string, string>(
+    docRecords.map((d: any) => [d.documentType, d.status]),
+  );
+  const dd = driverDoc as any;
+  const documents = [
+    { documentType: "aadhaar", fileUrl: dd.aadhaarUrl },
+    { documentType: "driving_license", fileUrl: dd.licenseUrl },
+    { documentType: "vehicle_rc", fileUrl: dd.vehicleRcUrl },
+    { documentType: "vehicle_photo", fileUrl: dd.vehiclePhotoUrl },
+    { documentType: "selfie", fileUrl: dd.driverPhotoUrl ?? dd.photo },
+  ]
+    .filter((x) => x.fileUrl)
+    .map((x) => ({
+      documentType: x.documentType,
+      fileUrl: x.fileUrl,
+      status: statusByType.get(x.documentType) ?? "pending",
+    }));
   res.json({
     ...enrich(driverDoc, user),
-    documents: documents.map(docToPlain),
+    documents,
     recentRides: recentRides.map(docToPlain),
   });
 });

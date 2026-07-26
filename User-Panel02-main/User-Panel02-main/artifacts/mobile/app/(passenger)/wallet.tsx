@@ -37,10 +37,21 @@ export default function WalletScreen() {
   const colors = useColors();
 
   const { data: balance } = useGetWalletBalance({
-    query: { queryKey: getGetWalletBalanceQueryKey() },
+    query: {
+      queryKey: getGetWalletBalanceQueryKey(),
+      // Keep balance fresh so admin wallet adjustments show up quickly
+      refetchInterval: 10000,
+      refetchOnMount: true,
+      staleTime: 0,
+    },
   });
   const { data: txData } = useGetWalletTransactions({
-    query: { queryKey: getGetWalletTransactionsQueryKey() },
+    query: {
+      queryKey: getGetWalletTransactionsQueryKey(),
+      refetchInterval: 15000,
+      refetchOnMount: true,
+      staleTime: 0,
+    },
   });
 
   const { mutateAsync: createOrder } = useCreatePaymentOrder();

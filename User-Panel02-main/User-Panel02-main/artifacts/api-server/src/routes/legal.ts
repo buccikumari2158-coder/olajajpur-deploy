@@ -98,7 +98,11 @@ For refund queries, contact jajpurjatri@gmail.com or call +91 9583789411.`,
 };
 
 router.get("/legal/:slug", (req, res) => {
-  const { slug } = req.params;
+  let { slug } = req.params;
+  // The app uses variants like privacy-passenger / privacy-driver — normalize them.
+  if (slug.startsWith("privacy")) slug = "privacy";
+  else if (slug.startsWith("terms")) slug = "terms";
+  else if (slug.startsWith("refund") || slug.startsWith("cancel")) slug = "refund";
   const doc = LEGAL_DOCS[slug];
   if (!doc) {
     res.status(404).json({ message: "Document not found" });
